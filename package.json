@@ -1,6 +1,6 @@
 {
   "name": "convert-yaml-to-csv",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "main": "index.js",
   "bin": {
     "convert-yaml-to-csv": "./index.js"
