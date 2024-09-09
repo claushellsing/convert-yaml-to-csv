@@ -1,0 +1,17 @@
+{
+  "name": "convert-yaml-to-csv",
+  "version": "1.0.0",
+  "main": "index.js",
+  "bin": {
+    "convert-yaml-to-csv": "./index.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "A tool to convert YAML files to CSV format",
+  "dependencies": {
+    "yaml": "^2.5.1"
+  }
+}
