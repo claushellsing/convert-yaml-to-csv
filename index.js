@@ -22,8 +22,11 @@ function yamlToCsv(yamlFile) {
     // Flatten the nested YAML structure
     const flattenedYaml = flattenDict(yamlData);
 
-    // Prepare CSV output
-    let csvOutput = 'key,en\n';
+    // Extract the base name of the YAML file without extension
+    const fileNameWithoutExt = path.basename(yamlFile, '.yaml');
+
+    // Prepare CSV output with the file name as the header for the second column
+    let csvOutput = `key,${fileNameWithoutExt}\n`;
 
     flattenedYaml.forEach(([key, value]) => {
         // Escape double quotes by doubling them in CSV format
