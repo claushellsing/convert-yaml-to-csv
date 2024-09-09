@@ -1,54 +1,55 @@
-#!/usr/bin/env node
-
 const fs = require('fs');
+const yaml = require('js-yaml');
 const path = require('path');
-const { parse } = require('yaml');
 
-const convertYamlToCsv = (yamlFilePath) => {
-  const fileName = path.basename(yamlFilePath, '.yaml');
-  const csvFilePath = path.join(path.dirname(yamlFilePath), `${fileName}.csv`);
-
-  try {
-    // Read the YAML file
-    const yamlContent = fs.readFileSync(yamlFilePath, 'utf8');
-    
-    // Parse YAML to JSON
-    const data = parse(yamlContent);
-
-    // Convert JSON to CSV
-    const csvLines = [];
-    const buildCsvLines = (obj, prefix = '') => {
-      Object.keys(obj).forEach(key => {
-        const value = obj[key];
-        const newPrefix = prefix ? `${prefix}.${key}` : key;
-        if (typeof value === 'object' && value !== null) {
-          buildCsvLines(value, newPrefix);
+function flattenDict(obj, parentKey = '', sep = '.') {
+    const items = [];
+    for (const [key, value] of Object.entries(obj)) {
+        const newKey = parentKey ? `${parentKey}${sep}${key}` : key;
+        if (value && typeof value === 'object' && !Array.isArray(value)) {
+            items.push(...flattenDict(value, newKey, sep));
         } else {
-          csvLines.push(`${newPrefix},${value}`);
+            items.push([newKey, value]);
         }
-      });
-    };
-
-    buildCsvLines(data);
-
-    // Add header
-    const csvHeader = `key,${fileName}`;
-    const csvContent = [csvHeader, ...csvLines].join('\n');
-
-    // Write to CSV file
-    fs.writeFileSync(csvFilePath, csvContent, 'utf8');
-    console.log(`CSV file has been created: ${csvFilePath}`);
-  } catch (e) {
-    console.error(`Error processing file: ${e.message}`);
-  }
-};
-
-// Check for command-line arguments
-if (process.argv.length !== 3) {
-  console.error('Usage: convert-yaml-to-csv <path_to_yaml_file>');
-  process.exit(1);
+    }
+    return items;
 }
 
-// Get the YAML file path from command-line arguments
-const yamlFilePath = process.argv[2];
-convertYamlToCsv(yamlFilePath);
+function yamlToCsv(yamlFile) {
+    // Load the YAML file
+    const yamlData = yaml.load(fs.readFileSync(yamlFile, 'utf8'));
+
+    // Flatten the nested YAML structure
+    const flattenedYaml = flattenDict(yamlData);
+
+    // Prepare CSV output
+    let csvOutput = 'key,en\n';
+
+    flattenedYaml.forEach(([key, value]) => {
+        // Escape double quotes by doubling them in CSV format
+        value = value.replace(/"/g, '""');
+        csvOutput += `${key},"${value}"\n`;
+    });
+
+    // Write CSV output to file
+    const csvFile = yamlFile.replace('.yaml', '.csv');
+    fs.writeFileSync(csvFile, csvOutput, 'utf8');
+
+    console.log(`YAML has been successfully converted to CSV and saved to ${csvFile}`);
+}
+
+if (require.main === module) {
+    if (process.argv.length < 3) {
+        console.error('Usage: node yaml_to_csv.js <path_to_yaml_file>');
+        process.exit(1);
+    }
+
+    const yamlFilePath = process.argv[2];
+
+    if (!fs.existsSync(yamlFilePath)) {
+        console.error(`Error: File '${yamlFilePath}' not found.`);
+        process.exit(1);
+    }
+
+    yamlToCsv(yamlFilePath);
+}
